@@ -11,8 +11,8 @@ language = st.selectbox("🌐 Select Language / भाषा चुनें", [
 st.subheader(t["weather_title"])
 
 # 🔑 Insert your OpenWeatherMap API Key here
-api_key = "your_openweathermap_api_key"  # <-- 🔴 REPLACE THIS
-
+api_key = "0a16832edf4445ce698396f2fa890ddd"  # <-- 🔴 REPLACE THIS
+t = texts[language]
 city = st.text_input(t["enter_city"])
 
 def get_weather(city_name):
