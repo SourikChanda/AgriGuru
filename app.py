@@ -116,5 +116,6 @@ if st.button(_("Predict Best Crop")):
     prediction = model.predict(input_data)
     predicted_crop = prediction[0]
     season = crop_seasons.get(predicted_crop, "Unknown")
-    st.success(f"🌱 { ('Predicted Crop') }: {predicted_crop} ({ _(season) } {('season')})")
+    crop_final = GoogleTranslator(source='en', target='auto').translate(predicted_crop)
+    st.success(f"🌱 { ('Predicted Crop') }: {crop_final} ({ _(season) } {('season')})")
     
