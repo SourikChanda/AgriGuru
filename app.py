@@ -92,4 +92,16 @@ if st.button("Predict Best Crop"):
     prediction = model.predict(input_data)
     predicted_crop = prediction[0]
     season = crop_seasons.get(predicted_crop, "Unknown")
-    st.success(f"🌱 Predicted Crop: **{predicted_crop}** ({season} season)")
+    st.success(f"🌱 Predicted Crop: **{predicted_crop}** ({season} season
+
+# ---------------- LANGUAGE SELECTION ----------------
+st.subheader("🌐 Choose Your Language")
+
+lang_options = ["English", "Hindi"]
+selected_lang = st.selectbox("Select Language", lang_options)
+if st.button("Set Language"):
+    st.success(f"Language set to: {selected_lang}")
+if selected_lang == "Hindi":
+    st.subheader("🌦️ 5-दिन का मौसम पूर्वानुमान")
+
+
