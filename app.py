@@ -84,17 +84,6 @@ except FileNotFoundError:
 st.subheader(_("🌦️ 5-Day Weather Forecast"))
 weather_api_key = "0a16832edf4445ce698396f2fa890ddd"
 
-district_to_city = {
-    "MALDAH": "Malda",
-    "BARDHAMAN": "Bardhaman",
-    "NADIA": "Krishnanagar",
-    "24 PARAGANAS NORTH": "Barasat",
-    "24 PARAGANAS SOUTH": "Diamond Harbour",
-    "HOWRAH": "Howrah",
-    "KOLKATA": "Kolkata"
-    # Add more as needed
-}
-
 def get_weather(city):
     url = f"http://api.openweathermap.org/data/2.5/forecast?q={city}&appid={weather_api_key}&units=metric"
     res = requests.get(url)
@@ -103,7 +92,8 @@ def get_weather(city):
     return None
 
 if district_selected_en:
-    city_query = district_to_city.get(district_selected_en.upper(), district_selected_en)
+    city = district_to_city.get(district_selected_en.upper(), district_selected_en)
+    city_query= GoogleTranslator(source='auto', target='en').translate(city)
     forecast = get_weather(city_query)
     if forecast:
         for day in forecast:
