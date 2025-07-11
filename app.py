@@ -7,12 +7,12 @@ st.set_page_config(page_title="AgriGuru Multilingual", layout="centered")
 
 # 🌐 Language selector first
 language = st.selectbox("🌐 Select Language / भाषा चुनें", ["English", "Hindi", "Bengali", "Tamil"])
-
+t = texts[language]
 st.subheader(t["weather_title"])
 
 # 🔑 Insert your OpenWeatherMap API Key here
 api_key = "0a16832edf4445ce698396f2fa890ddd"  # <-- 🔴 REPLACE THIS
-t = texts[language]
+
 city = st.text_input(t["enter_city"])
 
 def get_weather(city_name):
