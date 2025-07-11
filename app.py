@@ -1,112 +1,61 @@
-import streamlit as st
+import streamlit as st 
+import pandas as pd
 import requests
+from sklearn.ensemble import RandomForestClassifier
+from deep_translator import GoogleTranslator
 
-# Page config
-st.set_page_config(page_title="AgriGuru Multilingual", layout="centered")
-
-# Language selector
+# Language translation setup
 languages = {
     "English": "en",
     "Hindi": "hi",
     "Bengali": "bn",
+    "Marathi": "mr",
     "Tamil": "ta"
 }
-language = st.selectbox("🌐 Select Language / भाषा चुनें", list(languages.keys()))
-target_lang = languages[language]
 
-# LibreTranslate API function with better endpoint and fallback
-def libre_translate(text, target_lang):
+st.set_page_config(page_title="AgriGuru Lite", layout="centered")
+
+# 🌐 Language selection
+selected_lang = st.selectbox("🌐 Select Language", list(languages.keys()))
+target_lang = languages[selected_lang]
+
+# Translation function
+def _(text):
     if target_lang == "en":
         return text
     try:
-        response = requests.post(
-            "https://translate.argosopentech.com/translate",
-            json={
-                "q": text,
-                "source": "en",
-                "target": target_lang,
-                "format": "text"
-            },
-            timeout=5
-        )
-        if response.status_code == 200:
-            return response.json()["translatedText"]
-        else:
-            st.error(f"Translation failed with status code {response.status_code}")
-            return text
-    except Exception as e:
-        st.error(f"Translation error: {e}")
+        return GoogleTranslator(source='en', target=target_lang).translate(text)
+    except:
         return text
 
-# UI text keys
-ui_texts = {
-    "title": "🌾 AgriGuru – Smart Farming Assistant",
-    "weather_title": "🌦️ Weather Forecast",
-    "enter_city": "Enter your District/City",
-    "fetch_error": "Could not fetch weather. Please check the name.",
-    "crop_title": "🧠 Rule-Based Crop Recommendation",
-    "select_season": "Select Crop Season",
-    "select_soil": "Select Soil Type",
-    "recommendation": "Recommended Crops"
-}
+st.title(_("🌾 AgriGuru Lite – Smart Farming Assistant"))
 
-# Translate UI text
-t = {key: libre_translate(val, target_lang) for key, val in ui_texts.items()}
+# ---------------- WEATHER FORECAST ----------------
+st.subheader(_("🌦 5-Day Weather Forecast"))
+api_key = "0a16832edf4445ce698396f2fa890ddd"
 
-# UI
-st.title(t["title"])
-st.subheader(t["weather_title"])
+location = st.text_input(_("Enter your City/District (for weather)"))
 
-# Weather input
-api_key = "0a16832edf4445ce698396f2fa890ddd"  # Replace with your actual key
-city = st.text_input(t["enter_city"])
+def get_weather(city):
+    url = f"http://api.openweathermap.org/data/2.5/forecast?q={city}&appid={api_key}&units=metric"
+    res = requests.get(url)
+    if res.status_code == 200:
+        return res.json()['list'][:5]
+    return None
 
-def get_weather(city_name):
-    try:
-        url = f"http://api.openweathermap.org/data/2.5/forecast?q={city_name},IN&appid={api_key}&units=metric"
-        res = requests.get(url)
-        if res.status_code == 200:
-            return res.json()['list'][:5]
-        else:
-            return None
-    except:
-        return None
-
-if city:
-    data = get_weather(city)
-    if data:
-        for entry in data:
-            date = entry['dt_txt']
-            temp = entry['main']['temp']
-            desc = libre_translate(entry['weather'][0]['description'].capitalize(), target_lang)
-            st.write(f"{date} | 🌡️ {temp}°C | {desc}")
+if location:
+    forecast = get_weather(location)
+    if forecast:
+        for day in forecast:
+            st.write(f"{day['dt_txt']} | 🌡 {day['main']['temp']}°C | {_(day['weather'][0]['description'])}")
     else:
-        st.warning(t["fetch_error"])
+        st.warning(_("Couldn't fetch weather. Please check the city name."))
 
-# Crop Recommendation
-st.subheader(t["crop_title"])
+# ---------------- RULE-BASED CROP RECOMMENDATION ----------------
+st.subheader(_("🧠 Rule-Based Crop Recommendation"))
 
-# Dropdowns (translated)
-season_labels = {
-    "Kharif": libre_translate("Kharif", target_lang),
-    "Rabi": libre_translate("Rabi", target_lang),
-    "Zaid": libre_translate("Zaid", target_lang)
-}
-soil_labels = {
-    "Alluvial": libre_translate("Alluvial", target_lang),
-    "Black": libre_translate("Black", target_lang),
-    "Red": libre_translate("Red", target_lang),
-    "Laterite": libre_translate("Laterite", target_lang),
-    "Sandy": libre_translate("Sandy", target_lang),
-    "Clayey": libre_translate("Clayey", target_lang)
-}
-
-season = st.selectbox(t["select_season"], list(season_labels.values()))
-soil = st.selectbox(t["select_soil"], list(soil_labels.values()))
-
-# Reverse lookup
-rev_season = {v: k for k, v in season_labels.items()}
-rev_soil = {v: k for k, v in soil_labels.items()}
+season = st.selectbox(_("Select the Crop Season"), ["Kharif", "Rabi", "Zaid"])
+soil = st.selectbox(_("Select Soil Type"), ["Alluvial", "Black", "Red", "Laterite", "Sandy", "Clayey"])
 
 def recommend_crops(season, soil):
     if season == "Kharif" and soil == "Alluvial":
@@ -119,6 +68,52 @@ def recommend_crops(season, soil):
         return ["Millets", "Pulses", "Sunflower"]
 
 if season and soil:
-    crops = recommend_crops(rev_season[season], rev_soil[soil])
-    translated_crops = [libre_translate(crop, target_lang) for crop in crops]
-    st.success(t["recommendation"] + ": " + ", ".join(translated_crops))
+    rule_based = recommend_crops(season, soil)
+    st.success(_("Recommended Crops: ") + ", ".join(rule_based))
+
+# ---------------- ML-BASED CROP RECOMMENDATION ----------------
+st.subheader(_("🤖 ML-Based Crop Recommendation (via CSV + Random Forest)"))
+
+@st.cache_data
+def load_crop_data():
+    return pd.read_csv("Crop_recommendation.csv")
+
+df = load_crop_data()
+
+X = df.drop("label", axis=1)
+y = df["label"]
+
+model = RandomForestClassifier()
+model.fit(X, y)
+
+# Crop-to-Season Mapping
+crop_seasons = {
+    "rice": "Kharif", "maize": "Kharif", "jute": "Kharif", "cotton": "Kharif",
+    "kidneybeans": "Kharif", "pigeonpeas": "Kharif", "blackgram": "Kharif", 
+    "mothbeans": "Kharif", "mungbean": "Kharif",
+
+    "wheat": "Rabi", "gram": "Rabi", "lentil": "Rabi", "chickpea": "Rabi",
+    "grapes": "Rabi", "apple": "Rabi", "orange": "Rabi", "pomegranate": "Rabi",
+
+    "watermelon": "Zaid", "muskmelon": "Zaid", "cucumber": "Zaid",
+
+    "banana": "All Season", "mango": "All Season", "papaya": "All Season",
+    "coconut": "All Season", "coffee": "All Season"
+}
+
+st.markdown(_("Enter Soil and Climate Data for ML Prediction"))
+n = st.number_input(_("Nitrogen (N)"), min_value=0.0)
+p = st.number_input(_("Phosphorus (P)"), min_value=0.0)
+k = st.number_input(_("Potassium (K)"), min_value=0.0)
+temp = st.number_input(_("Temperature (°C)"), min_value=0.0)
+humidity = st.number_input(_("Humidity (%)"), min_value=0.0)
+ph = st.number_input(_("Soil pH"), min_value=0.0)
+rainfall = st.number_input(_("Rainfall (mm)"), min_value=0.0)
+
+if st.button(_("Predict Best Crop")):
+    input_data = [[n, p, k, temp, humidity, ph, rainfall]]
+    prediction = model.predict(input_data)
+    predicted_crop = prediction[0]
+    season = crop_seasons.get(predicted_crop, "Unknown")
+    st.success(f"🌱 { ('Predicted Crop') }: {predicted_crop} ({ _(season) } {('season')})")
+    
