@@ -154,7 +154,14 @@ def load_soil_dataset():
     features = ["Nitrogen", "Phosphorous", "Potassium", "Temparature", "Humidity", "Moisture", "soil_encoded"]
     X = df[features]
     y = df["Crop Type"]
-    model = XGBClassifier(use_label_encoder=False, eval_metric='mlogloss')
+    
+    model = XGBClassifier(
+    n_estimators=100,
+    learning_rate=0.1,
+    max_depth=5,
+    use_label_encoder=False,
+    eval_metric='mlogloss'
+)
 
     model.fit(X, y)
     return model, le, df
