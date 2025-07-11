@@ -5,7 +5,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 from deep_translator import GoogleTranslator
 
-
 # Language translation setup
 languages = {
     "English": "en",
@@ -21,18 +20,25 @@ st.set_page_config(page_title="AgriGuru Lite", layout="centered")
 selected_lang = st.selectbox("🌐 Select Language", list(languages.keys()))
 target_lang = languages[selected_lang]
 
-# Translation function
+# Translation function: translate **any** text from auto-detected source to target_lang
 def _(text):
- if target_lang == "en":
+    if target_lang == "en":
         return text
- try:
-        return GoogleTranslator(source='en', target=target_lang).translate(text)
- except:
+    try:
+        return GoogleTranslator(source='auto', target=target_lang).translate(text)
+    except Exception:
+        return text
+
+# Translate input text *from user language* to English for internal processing
+def to_english(text):
+    if target_lang == "en":
+        return text
+    try:
+        return GoogleTranslator(source=target_lang, target='en').translate(text)
+    except Exception:
         return text
 
 st.title(_("🌾 AgriGuru Lite – Smart Farming Assistant"))
-
-
 
 # ---------------- LOAD PRODUCTION DATA ----------------
 @st.cache_data
@@ -42,30 +48,42 @@ def load_production_data():
 try:
     prod_df = load_production_data()
 
-    state_filter = st.selectbox("🌍 Select State", prod_df["State_Name"].dropna().unique())
-    state= GoogleTranslator(source='auto', target='en').translate(state_filter)
-    district_filter = st.selectbox("🏞️ Select District", prod_df[prod_df["State_Name"] == state_filter]["District_Name"].dropna().unique())
-    district= GoogleTranslator(source='auto', target='en').translate(district_filter)
-    season_filter = st.selectbox("🗓️ Select Season", prod_df["Season"].dropna().unique())
-    season= GoogleTranslator(source='auto', target='en').translate(season_filter)
+    # For selectboxes, show values in user language but keep English for processing
+    # So we translate the options to target_lang for display
 
-    def _(state):
-                if target_lang == "en":
-                   return text
-                try:
-                   return GoogleTranslator(source='en', target=target_lang).translate(text)
-                except:
-                   return text
+    # Get unique states in English
+    unique_states_en = prod_df["State_Name"].dropna().unique()
 
-    st.markdown(f"### 📍 Selected Region: **{district_filter}, {state_filter}** | Season: **{season_filter}**")
+    # Translate states to user language for display
+    states_display = [_(state) for state in unique_states_en]
+
+    # User selects displayed state name
+    state_display_selected = st.selectbox(_("🌍 Select State"), states_display)
+    # Translate back to English
+    state_selected_en = to_english(state_display_selected)
+
+    # Filter districts for the selected state (English)
+    districts_en = prod_df[prod_df["State_Name"] == state_selected_en]["District_Name"].dropna().unique()
+    districts_display = [_(district) for district in districts_en]
+    district_display_selected = st.selectbox(_("🏞️ Select District"), districts_display)
+    district_selected_en = to_english(district_display_selected)
+
+    # Seasons
+    seasons_en = prod_df["Season"].dropna().unique()
+    seasons_display = [_(season) for season in seasons_en]
+    season_display_selected = st.selectbox(_("🗓️ Select Season"), seasons_display)
+    season_selected_en = to_english(season_display_selected)
+
+    st.markdown(f"### 📍 {_('Selected Region')}: **{district_display_selected}, {state_display_selected}** | {_('Season')}: **{season_display_selected}**")
+
 except FileNotFoundError:
-    st.warning("Please upload `crop_production.csv`.")
+    st.warning(_("Please upload `crop_production.csv`."))
+
 
 # ---------------- WEATHER FORECAST ----------------
-st.subheader("🌦️ 5-Day Weather Forecast")
+st.subheader(_("🌦️ 5-Day Weather Forecast"))
 weather_api_key = "0a16832edf4445ce698396f2fa890ddd"
 
-# Map district to valid city name (basic fallback)
 district_to_city = {
     "MALDAH": "Malda",
     "BARDHAMAN": "Bardhaman",
@@ -84,17 +102,19 @@ def get_weather(city):
         return res.json()['list'][:5]
     return None
 
-if district:
-    city_query = district_to_city.get(district.upper(), district_filter)
+if district_selected_en:
+    city_query = district_to_city.get(district_selected_en.upper(), district_selected_en)
     forecast = get_weather(city_query)
     if forecast:
         for day in forecast:
-            st.write(f"{day['dt_txt']} | 🌡️ {day['main']['temp']}°C | {day['weather'][0]['description']}")
+            # Translate weather description to user language
+            description_translated = _(day['weather'][0]['description'])
+            st.write(f"{day['dt_txt']} | 🌡️ {day['main']['temp']}°C | {description_translated}")
     else:
-        st.warning("⚠️ Weather unavailable. Try entering a nearby city manually.")
+        st.warning(_("⚠️ Weather unavailable. Try entering a nearby city manually."))
 
 # ---------------- SOIL TYPE BUTTONS ----------------
-st.subheader("🧱 Explore Suitable Crops by Soil Type")
+st.subheader(_("🧱 Explore Suitable Crops by Soil Type"))
 
 soil_crop_map = {
     "Alluvial": ["Rice", "Sugarcane", "Wheat", "Jute"],
@@ -106,44 +126,31 @@ soil_crop_map = {
     "Loamy": ["Maize", "Barley", "Sugarcane"]
 }
 
-soil_col1, soil_col2, soil_col3 = st.columns(3)
-with soil_col1:
-    if st.button("Alluvial"):
-        st.info("🌾 Suitable Crops: " + ", ".join(soil_crop_map["Alluvial"]))
-with soil_col2:
-    if st.button("Black"):
-        st.info("🌾 Suitable Crops: " + ", ".join(soil_crop_map["Black"]))
-with soil_col3:
-    if st.button("Red"):
-        st.info("🌾 Suitable Crops: " + ", ".join(soil_crop_map["Red"]))
+soil_types = list(soil_crop_map.keys())
+soil_types_display = [_(soil) for soil in soil_types]
 
-soil_col4, soil_col5, soil_col6 = st.columns(3)
-with soil_col4:
-    if st.button("Laterite"):
-        st.info("🌾 Suitable Crops: " + ", ".join(soil_crop_map["Laterite"]))
-with soil_col5:
-    if st.button("Sandy"):
-        st.info("🌾 Suitable Crops: " + ", ".join(soil_crop_map["Sandy"]))
-with soil_col6:
-    if st.button("Clayey"):
-        st.info("🌾 Suitable Crops: " + ", ".join(soil_crop_map["Clayey"]))
-
-if st.button("Loamy"):
-    st.info("🌾 Suitable Crops: " + ", ".join(soil_crop_map["Loamy"]))
+soil_cols = st.columns(3)
+for i, soil_display in enumerate(soil_types_display):
+    with soil_cols[i % 3]:
+        if st.button(soil_display):
+            soil_key = soil_types[i]
+            # Translate crop names to user language
+            crops_translated = [_(crop) for crop in soil_crop_map[soil_key]]
+            st.info(_("🌾 Suitable Crops: ") + ", ".join(crops_translated))
 
 st.divider()
 
 # ---------------- USER INPUT FOR ML ----------------
-st.markdown("### 📥 Enter Soil and Climate Data (for ML Prediction)")
-n = st.number_input("Nitrogen", min_value=0.0)
-p = st.number_input("Phosphorous", min_value=0.0)
-k = st.number_input("Potassium", min_value=0.0)
-temp = st.number_input("Temparature (°C)", min_value=0.0)
-humidity = st.number_input("Humidity (%)", min_value=0.0)
-moisture = st.number_input("Moisture (%)", min_value=0.0)
+st.markdown(_("### 📥 Enter Soil and Climate Data (for ML Prediction)"))
+n = st.number_input(_("Nitrogen"), min_value=0.0)
+p = st.number_input(_("Phosphorous"), min_value=0.0)
+k = st.number_input(_("Potassium"), min_value=0.0)
+temp = st.number_input(_("Temperature (°C)"), min_value=0.0)
+humidity = st.number_input(_("Humidity (%)"), min_value=0.0)
+moisture = st.number_input(_("Moisture (%)"), min_value=0.0)
 
 # ---------------- ML MODEL: FILTERED BY DISTRICT CROPS ----------------
-st.subheader("🌿 ML-Powered Crop Recommendation (Filtered by District)")
+st.subheader(_("🌿 ML-Powered Crop Recommendation (Filtered by District)"))
 
 @st.cache_data
 def load_soil_dataset():
@@ -159,16 +166,21 @@ def load_soil_dataset():
 
 try:
     soil_model, soil_encoder, soil_df = load_soil_dataset()
-    soil_input = st.selectbox("🧪 Select Soil Type for ML", soil_df["Soil Type"].unique())
 
-    if st.button("Predict Best Crops in District"):
-        encoded_soil = soil_encoder.transform([soil_input])[0]
+    # Show soil type options translated for user
+    soil_types_ml = soil_df["Soil Type"].unique()
+    soil_types_ml_display = [_(soil) for soil in soil_types_ml]
+    soil_display_selected = st.selectbox(_("🧪 Select Soil Type for ML"), soil_types_ml_display)
+    soil_selected_en = to_english(soil_display_selected)
+
+    if st.button(_("Predict Best Crops in District")):
+        encoded_soil = soil_encoder.transform([soil_selected_en])[0]
         input_data = [[n, p, k, temp, humidity, moisture, encoded_soil]]
 
-        # Get all unique crops from the district
+        # Get all unique crops from the district in English
         district_crops = prod_df[
-            (prod_df["District_Name"] == district_filter) &
-            (prod_df["State_Name"] == state_filter)
+            (prod_df["District_Name"] == district_selected_en) &
+            (prod_df["State_Name"] == state_selected_en)
         ]["Crop"].dropna().unique()
 
         # Get ML predicted probabilities for all crops
@@ -176,15 +188,18 @@ try:
         labels = soil_model.classes_
         crop_scores = {label: prob for label, prob in zip(labels, proba)}
 
-        # Sort only crops that are grown in the district
+        # Sort only crops grown in district
         recommended = [(crop, crop_scores[crop]) for crop in district_crops if crop in crop_scores]
         recommended = sorted(recommended, key=lambda x: x[1], reverse=True)[:5]
 
         if recommended:
-            st.success("✅ Top Recommended Crops Grown in Your District:")
+            st.success(_("✅ Top Recommended Crops Grown in Your District:"))
             for crop, score in recommended:
-                st.write(f"🌱 **{crop}** – Confidence: {score:.2f}")
+                # Translate crop name to user language
+                crop_translated = _(crop)
+                st.write(f"🌱 **{crop_translated}** – " + _("Confidence: ") + f"{score:.2f}")
         else:
-            st.warning("❌ No matching crops from prediction found in this district.")
+            st.warning(_("❌ No matching crops from prediction found in this district."))
+
 except FileNotFoundError:
-    st.warning("Please upload `data_core.csv`.")
+    st.warning(_("Please upload `data_core.csv`."))
