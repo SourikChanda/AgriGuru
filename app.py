@@ -1,7 +1,7 @@
 import streamlit as st 
 import pandas as pd
 import requests
-from sklearn.ensemble import RandomForestClassifie
+from sklearn.ensemble import RandomForestClassifier
 
 
 lang = st.selectbox("🌐 Choose Your Language / अपनी भाषा चुनें", list(translations.keys()))
