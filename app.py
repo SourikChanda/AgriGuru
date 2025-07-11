@@ -4,7 +4,7 @@ import requests
 from sklearn.ensemble import RandomForestClassifier
 
 
-lang = st.selectbox("🌐 Choose Your Language / अपनी भाषा चुनें", list(translations.keys()))
+lang = st.selectbox("🌐 Choose Your Language / अपनी भाषा चुनें", )
 t = translations[lang]  # Select appropriate translation set
 st.set_page_config(page_title="AgriGuru Lite", layout="centered")
 
