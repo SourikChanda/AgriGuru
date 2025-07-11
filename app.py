@@ -5,6 +5,33 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 from deep_translator import GoogleTranslator
 
+
+# Language translation setup
+languages = {
+    "English": "en",
+    "Hindi": "hi",
+    "Bengali": "bn",
+    "Marathi": "mr",
+    "Tamil": "ta"
+}
+
+st.set_page_config(page_title="AgriGuru Lite", layout="centered")
+
+# 🌐 Language selection
+selected_lang = st.selectbox("🌐 Select Language", list(languages.keys()))
+target_lang = languages[selected_lang]
+
+# Translation function
+def _(text):
+    if target_lang == "en":
+        return text
+    try:
+        return GoogleTranslator(source='en', target=target_lang).translate(text)
+    except:
+        return text
+
+st.title(_("🌾 AgriGuru Lite – Smart Farming Assistant"))
+
 st.set_page_config(page_title="AgriGuru Lite", layout="centered")
 st.title("🌾 AgriGuru Lite – Smart Farming Assistant")
 
