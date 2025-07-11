@@ -23,11 +23,11 @@ target_lang = languages[selected_lang]
 
 # Translation function
 def _(text):
-    if target_lang == "en":
+ if target_lang == "en":
         return text
-    try:
+ try:
         return GoogleTranslator(source='en', target=target_lang).translate(text)
-    except:
+ except:
         return text
 
 st.title(_("🌾 AgriGuru Lite – Smart Farming Assistant"))
