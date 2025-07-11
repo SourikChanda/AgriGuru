@@ -4,58 +4,61 @@ import requests
 # Set page config
 st.set_page_config(page_title="AgriGuru Multilingual", layout="centered")
 
-
-# 🌐 Language selector first
-language = st.selectbox("🌐 Select Language / भाषा चुनें", ["English", "Hindi", "Bengali", "Tamil"])
-texts = {
-    "English": {
-        "title": "🌾 AgriGuru – Smart Farming Assistant",
-        "weather_title": "🌦️ Weather Forecast",
-        "enter_city": "Enter your District/City",
-        "fetch_error": "Could not fetch weather. Please check the name.",
-        "crop_title": "🧠 Rule-Based Crop Recommendation",
-        "select_season": "Select Crop Season",
-        "select_soil": "Select Soil Type",
-        "recommendation": "Recommended Crops"
-    },
-    "Hindi": {
-        "title": "🌾 AgriGuru – स्मार्ट खेती सहायक",
-        "weather_title": "🌦️ मौसम पूर्वानुमान",
-        "enter_city": "अपना जिला/शहर दर्ज करें",
-        "fetch_error": "मौसम डेटा प्राप्त नहीं हो सका। कृपया नाम जांचें।",
-        "crop_title": "🧠 नियम आधारित फसल सिफारिश",
-        "select_season": "फसल का मौसम चुनें",
-        "select_soil": "मिट्टी का प्रकार चुनें",
-        "recommendation": "अनुशंसित फसलें"
-    },
-    "Bengali": {
-        "title": "🌾 AgriGuru – স্মার্ট কৃষি সহকারী",
-        "weather_title": "🌦️ আবহাওয়ার পূর্বাভাস",
-        "enter_city": "আপনার জেলা/শহরের নাম লিখুন",
-        "fetch_error": "আবহাওয়া পাওয়া যায়নি। নাম চেক করুন।",
-        "crop_title": "🧠 নিয়মভিত্তিক ফসল সুপারিশ",
-        "select_season": "ফসলের ঋতু নির্বাচন করুন",
-        "select_soil": "মাটির ধরন নির্বাচন করুন",
-        "recommendation": "সুপারিশকৃত ফসল"
-    },
-    "Tamil": {
-        "title": "🌾 AgriGuru – ஸ்மார்ட் விவசாய உதவியாளர்",
-        "weather_title": "🌦️ வானிலை முன்னறிவு",
-        "enter_city": "உங்கள் மாவட்டம்/நகரத்தை உள்ளிடவும்",
-        "fetch_error": "வானிலை பெற முடியவில்லை. நகரப்பெயரை சரிபார்க்கவும்.",
-        "crop_title": "🧠 விதிமுறை அடிப்படையிலான பயிர் பரிந்துரை",
-        "select_season": "பயிர் பருவத்தை தேர்வு செய்க",
-        "select_soil": "மண்ணின் வகையை தேர்வு செய்க",
-        "recommendation": "பரிந்துரைக்கப்பட்ட பயிர்கள்"
-    }
+# Supported languages
+languages = {
+    "English": "en",
+    "Hindi": "hi",
+    "Bengali": "bn",
+    "Tamil": "ta"
 }
 
-t = texts[language] 
-t = texts[language]
+language = st.selectbox("🌐 Select Language / भाषा चुनें", list(languages.keys()))
+target_lang = languages[language]
+
+
+# LibreTranslate API Function
+def libre_translate(text, target_lang):
+    if target_lang == "en":  # No need to translate English
+        return text
+    try:
+        response = requests.post(
+            "https://libretranslate.de/translate",
+            data={
+                "q": text,
+                "source": "en",
+                "target": target_lang,
+                "format": "text"
+            }
+        )
+        if response.status_code == 200:
+            return response.json()["translatedText"]
+        else:
+            return text  # Fallback to original
+    except:
+        return text
+
+
+# UI texts to translate
+ui_texts = {
+    "weather_title": "🌦️ Weather Forecast",
+    "enter_city": "Enter your District/City",
+    "fetch_error": "Could not fetch weather. Please check the name.",
+    "crop_title": "🧠 Rule-Based Crop Recommendation",
+    "select_season": "Select Crop Season",
+    "select_soil": "Select Soil Type",
+    "recommendation": "Recommended Crops",
+    "title": "🌾 AgriGuru – Smart Farming Assistant"
+}
+
+# Translate UI text dynamically
+t = {key: libre_translate(val, target_lang) for key, val in ui_texts.items()}
+
+# Page content
+st.title(t["title"])
 st.subheader(t["weather_title"])
 
-# 🔑 Insert your OpenWeatherMap API Key here
-api_key = "0a16832edf4445ce698396f2fa890ddd"  # <-- 🔴 REPLACE THIS
+# 🔑 Weather API Key
+api_key = "0a16832edf4445ce698396f2fa890ddd"  # Replace with your OpenWeatherMap key
 
 city = st.text_input(t["enter_city"])
 
@@ -65,7 +68,7 @@ def get_weather(city_name):
         res = requests.get(url)
         if res.status_code == 200:
             data = res.json()
-            return data['list'][:5]  # Return 5 records (approx 5-day forecast)
+            return data['list'][:5]
         else:
             return None
     except Exception as e:
@@ -83,37 +86,45 @@ if city:
         st.warning(t["fetch_error"])
 
 
-
-
 # ---------- Rule-Based Crop Recommendation ----------
 st.subheader(t["crop_title"])
 
-seasons = {
-    "English": ["Kharif", "Rabi", "Zaid"],
-    "Hindi": ["खरीफ", "रबी", "जायद"],
-    "Bengali": ["খরিফ", "রবি", "জায়দ"],
-    "Tamil": ["கரிஃப்", "ரபி", "சாயித்"]
-}
-soils = {
-    "English": ["Alluvial", "Black", "Red", "Laterite", "Sandy", "Clayey"],
-    "Hindi": ["जलोढ़", "काली", "लाल", "लेटेराइट", "बलुई", "मिट्टीदार"],
-    "Bengali": ["পলিমাটি", "কালো", "লাল", "ল্যাটেরাইট", "বেলে", "কাদাযুক্ত"],
-    "Tamil": ["ஆலுவியல்", "கருப்பு", "சிவப்பு", "லேட்டரைட்", "மணல்", "களிமண்"]
+# Season and Soil options (translated)
+season_options = {
+    "Kharif": libre_translate("Kharif", target_lang),
+    "Rabi": libre_translate("Rabi", target_lang),
+    "Zaid": libre_translate("Zaid", target_lang)
 }
 
-season = st.selectbox(t["select_season"], seasons[language])
-soil = st.selectbox(t["select_soil"], soils[language])
+soil_options = {
+    "Alluvial": libre_translate("Alluvial", target_lang),
+    "Black": libre_translate("Black", target_lang),
+    "Red": libre_translate("Red", target_lang),
+    "Laterite": libre_translate("Laterite", target_lang),
+    "Sandy": libre_translate("Sandy", target_lang),
+    "Clayey": libre_translate("Clayey", target_lang)
+}
+
+season = st.selectbox(t["select_season"], list(season_options.values()))
+soil = st.selectbox(t["select_soil"], list(soil_options.values()))
+
+# Reverse mapping for logic
+rev_season = {v: k for k, v in season_options.items()}
+rev_soil = {v: k for k, v in soil_options.items()}
 
 def recommend_crops(season, soil):
-    if season in ["Kharif", "खरीफ", "খরিফ", "கரிஃப்"] and soil in ["Alluvial", "जलोढ़", "পলিমাটি", "ஆலுவியல்"]:
+    if season == "Kharif" and soil == "Alluvial":
         return ["Paddy", "Maize", "Jute"]
-    elif season in ["Rabi", "रबी", "রবি", "ரபி"] and soil in ["Black", "काली", "কালো", "கருப்பு"]:
+    elif season == "Rabi" and soil == "Black":
         return ["Wheat", "Barley", "Gram"]
-    elif season in ["Zaid", "जायद", "জায়দ", "சாயித்"]:
+    elif season == "Zaid":
         return ["Watermelon", "Cucumber", "Bitter Gourd"]
     else:
         return ["Millets", "Pulses", "Sunflower"]
 
 if season and soil:
-    crops = recommend_crops(season, soil)
-    st.success(t["recommendation"] + ": " + ", ".join(crops))
+    eng_season = rev_season.get(season)
+    eng_soil = rev_soil.get(soil)
+    crops = recommend_crops(eng_season, eng_soil)
+    translated_crops = [libre_translate(crop, target_lang) for crop in crops]
+    st.success(t["recommendation"] + ": " + ", ".join(translated_crops))
