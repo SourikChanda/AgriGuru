@@ -136,7 +136,7 @@ with col3:
     moisture = st.number_input(_("Moisture (%)"), min_value=0.0, key="moisture")
 
 # ---------------- ML MODEL ----------------
-streamlit run app.py
+
 
 
 from xgboost import XGBClassifier
