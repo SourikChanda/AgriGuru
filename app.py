@@ -136,7 +136,11 @@ with col3:
     moisture = st.number_input(_("Moisture (%)"), min_value=0.0, key="moisture")
 
 # ---------------- ML MODEL ----------------
-pip install xgboost
+import subprocess
+import sys
+
+subprocess.check_call([sys.executable, "-m", "pip", "install", "xgboost"])
+
 from xgboost import XGBClassifier
 
 district_crops = prod_df[
