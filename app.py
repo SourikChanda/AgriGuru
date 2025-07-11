@@ -3,6 +3,44 @@ import pandas as pd
 import requests
 from sklearn.ensemble import RandomForestClassifier
 
+# LANGUAGE DICTIONARY
+translations = {
+    "English": {
+        "title": "🌾 AgriGuru Lite – Smart Farming Assistant",
+        "select_lang": "🌐 Choose Your Language",
+        "weather_title": "🌦️ 5-Day Weather Forecast",
+        "enter_city": "Enter your City/District (for weather)",
+        "weather_error": "Couldn't fetch weather. Please check the city name.",
+        "crop_rule_title": "🧠 Rule-Based Crop Recommendation",
+        "season_select": "Select the Crop Season",
+        "soil_select": "Select Soil Type",
+        "recommendation": "Recommended Crops",
+        "ml_title": "🤖 ML-Based Crop Recommendation (via CSV + Random Forest)",
+        "input_prompt": "**Enter Soil and Climate Data for ML Prediction**",
+        "predict_button": "Predict Best Crop",
+        "result_text": "🌱 Predicted Crop",
+        "season_suffix": "season"
+    },
+    "Hindi": {
+        "title": "🌾 AgriGuru Lite – स्मार्ट फार्मिंग सहायक",
+        "select_lang": "🌐 अपनी भाषा चुनें",
+        "weather_title": "🌦️ 5-दिन का मौसम पूर्वानुमान",
+        "enter_city": "शहर/जिले का नाम दर्ज करें (मौसम के लिए)",
+        "weather_error": "मौसम जानकारी प्राप्त नहीं कर सके। कृपया शहर का नाम जांचें।",
+        "crop_rule_title": "🧠 नियम-आधारित फसल सिफारिश",
+        "season_select": "फसल का मौसम चुनें",
+        "soil_select": "मिट्टी का प्रकार चुनें",
+        "recommendation": "सिफारिश की गई फसलें",
+        "ml_title": "🤖 मशीन लर्निंग फसल सिफारिश (CSV + रैंडम फॉरेस्ट)",
+        "input_prompt": "**मिट्टी और जलवायु डेटा दर्ज करें**",
+        "predict_button": "सबसे अच्छी फसल की भविष्यवाणी करें",
+        "result_text": "🌱 अनुशंसित फसल",
+        "season_suffix": "मौसम"
+    }
+   
+}
+
+
 st.set_page_config(page_title="AgriGuru Lite", layout="centered")
 
 st.title("🌾 AgriGuru Lite – Smart Farming Assistant")
