@@ -49,6 +49,14 @@ try:
     season_filter = st.selectbox("🗓️ Select Season", prod_df["Season"].dropna().unique())
     season= GoogleTranslator(source='auto', target='en').translate(season_filter)
 
+    def _(state):
+    if target_lang == "en":
+        return text
+    try:
+        return GoogleTranslator(source='en', target=target_lang).translate(text)
+    except:
+        return text
+
     st.markdown(f"### 📍 Selected Region: **{district_filter}, {state_filter}** | Season: **{season_filter}**")
 except FileNotFoundError:
     st.warning("Please upload `crop_production.csv`.")
