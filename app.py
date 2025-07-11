@@ -72,7 +72,7 @@ except FileNotFoundError:
     st.warning(_("⚠ Please upload crop_production.csv."))
 
 # ---------------- WEATHER FORECAST ----------------
-st.markdown("### ⛅ " + _("5-Day Weather Forecast"))
+st.markdown("### ⛅ " + _(" Weather Forecast"))
 weather_api_key = "0a16832edf4445ce698396f2fa890ddd"
 
 def get_weather(city):
