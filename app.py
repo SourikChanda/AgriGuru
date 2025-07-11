@@ -136,6 +136,9 @@ with col3:
     moisture = st.number_input(_("Moisture (%)"), min_value=0.0, key="moisture")
 
 # ---------------- ML MODEL ----------------
+pip install xgboost
+from xgboost import XGBClassifier
+
 district_crops = prod_df[
     (prod_df["District_Name"] == selected_district) &
     (prod_df["State_Name"] == selected_state)
@@ -151,7 +154,8 @@ def load_soil_dataset():
     features = ["Nitrogen", "Phosphorous", "Potassium", "Temparature", "Humidity", "Moisture", "soil_encoded"]
     X = df[features]
     y = df["Crop Type"]
-    model = RandomForestClassifier()
+    model = XGBClassifier(use_label_encoder=False, eval_metric='mlogloss')
+
     model.fit(X, y)
     return model, le, df
 
