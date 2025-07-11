@@ -32,8 +32,7 @@ def _(text):
 
 st.title(_("🌾 AgriGuru Lite – Smart Farming Assistant"))
 
-st.set_page_config(page_title="AgriGuru Lite", layout="centered")
-st.title("🌾 AgriGuru Lite – Smart Farming Assistant")
+
 
 # ---------------- LOAD PRODUCTION DATA ----------------
 @st.cache_data
