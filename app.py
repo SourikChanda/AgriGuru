@@ -7,37 +7,6 @@ st.set_page_config(page_title="AgriGuru Multilingual", layout="centered")
 
 # 🌐 Language selector first
 language = st.selectbox("🌐 Select Language / भाषा चुनें", ["English", "Hindi", "Bengali", "Tamil"])
-t = texts[language]
-st.subheader(t["weather_title"])
-
-# 🔑 Insert your OpenWeatherMap API Key here
-api_key = "0a16832edf4445ce698396f2fa890ddd"  # <-- 🔴 REPLACE THIS
-
-city = st.text_input(t["enter_city"])
-
-def get_weather(city_name):
-    try:
-        url = f"http://api.openweathermap.org/data/2.5/forecast?q={city_name},IN&appid={api_key}&units=metric"
-        res = requests.get(url)
-        if res.status_code == 200:
-            data = res.json()
-            return data['list'][:5]  # Return 5 records (approx 5-day forecast)
-        else:
-            return None
-    except Exception as e:
-        return None
-
-if city:
-    weather_data = get_weather(city)
-    if weather_data:
-        for entry in weather_data:
-            date = entry['dt_txt']
-            temp = entry['main']['temp']
-            desc = entry['weather'][0]['description'].capitalize()
-            st.write(f"{date} | 🌡️ {temp}°C | {desc}")
-    else:
-        st.warning(t["fetch_error"])
-# ---- Translation Dictionary ----
 texts = {
     "English": {
         "title": "🌾 AgriGuru – Smart Farming Assistant",
@@ -81,34 +50,40 @@ texts = {
     }
 }
 
-t = texts[language]  # selected translation
-
-# ---------- Title ----------
-st.title(t["title"])
-
-# ---------- Weather Section ----------
+t = texts[language] 
+t = texts[language]
 st.subheader(t["weather_title"])
-api_key = "your_openweathermap_api_key"  # Replace with your API key
+
+# 🔑 Insert your OpenWeatherMap API Key here
+api_key = "0a16832edf4445ce698396f2fa890ddd"  # <-- 🔴 REPLACE THIS
+
 city = st.text_input(t["enter_city"])
 
-def get_weather(city):
-    url = f"http://api.openweathermap.org/data/2.5/forecast?q={city},IN&appid={api_key}&units=metric"
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.json()['list'][:5]  # 5 records (~1 per day)
-    else:
+def get_weather(city_name):
+    try:
+        url = f"http://api.openweathermap.org/data/2.5/forecast?q={city_name},IN&appid={api_key}&units=metric"
+        res = requests.get(url)
+        if res.status_code == 200:
+            data = res.json()
+            return data['list'][:5]  # Return 5 records (approx 5-day forecast)
+        else:
+            return None
+    except Exception as e:
         return None
 
 if city:
-    data = get_weather(city)
-    if data:
-        for entry in data:
-            dt = entry["dt_txt"]
-            temp = entry["main"]["temp"]
-            desc = entry["weather"][0]["description"]
-            st.write(f"{dt} | 🌡️ {temp}°C | {desc}")
+    weather_data = get_weather(city)
+    if weather_data:
+        for entry in weather_data:
+            date = entry['dt_txt']
+            temp = entry['main']['temp']
+            desc = entry['weather'][0]['description'].capitalize()
+            st.write(f"{date} | 🌡️ {temp}°C | {desc}")
     else:
         st.warning(t["fetch_error"])
+
+
+
 
 # ---------- Rule-Based Crop Recommendation ----------
 st.subheader(t["crop_title"])
