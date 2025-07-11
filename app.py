@@ -1,6 +1,8 @@
+import streamlit as st 
+import pandas as pd
+import requests
+from sklearn.ensemble import RandomForestClassifie
 
-st.set_page_config(page_title="AgriGuru Lite", layout="centered")
-st.title("🌾 AgriGuru Lite – Smart Farming Assistant")
 
 lang = st.selectbox("🌐 Choose Your Language / अपनी भाषा चुनें", list(translations.keys()))
 t = translations[lang]  # Select appropriate translation set
