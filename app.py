@@ -40,10 +40,15 @@ translations = {
    
 }
 
-
 st.set_page_config(page_title="AgriGuru Lite", layout="centered")
-
 st.title("🌾 AgriGuru Lite – Smart Farming Assistant")
+
+lang = st.selectbox("🌐 Choose Your Language / अपनी भाषा चुनें", list(translations.keys()))
+t = translations[lang]  # Select appropriate translation set
+
+
+
+
 
 # ---------------- WEATHER FORECAST ----------------
 st.subheader("🌦️ 5-Day Weather Forecast")
