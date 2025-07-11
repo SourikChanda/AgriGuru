@@ -34,7 +34,8 @@ st.title(_("🌾 AgriGuru Lite – Smart Farming Assistant"))
 st.subheader(_("🌦 5-Day Weather Forecast"))
 api_key = "0a16832edf4445ce698396f2fa890ddd"
 
-location = st.text_input(_("Enter your City/District (for weather)"))
+text = st.text_input(_("Enter your City/District (for weather)"))
+location = GoogleTranslator(source='auto', target='en').translate(text)
 
 def get_weather(city):
     url = f"http://api.openweathermap.org/data/2.5/forecast?q={city}&appid={api_key}&units=metric"
