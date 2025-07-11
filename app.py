@@ -136,6 +136,11 @@ with col3:
     moisture = st.number_input(_("Moisture (%)"), min_value=0.0, key="moisture")
 
 # ---------------- ML MODEL ----------------
+district_crops = prod_df[
+    (prod_df["District_Name"] == selected_district) &
+    (prod_df["State_Name"] == selected_state)
+]["Crop"].dropna().unique()
+
 st.markdown(f"### 🌿 { _('ML-Powered Crop Recommendation (Filtered by District)') }")
 
 @st.cache_data
@@ -152,6 +157,8 @@ def load_soil_dataset():
 
 try:
     soil_model, soil_encoder, soil_df = load_soil_dataset()
+
+    # Show translated soil types for selection
     soil_display = [_(s) for s in soil_df["Soil Type"].unique()]
     selected_soil_display = st.selectbox(_("🧪 Select Soil Type for ML"), soil_display)
     selected_soil = soil_df["Soil Type"].unique()[soil_display.index(selected_soil_display)]
@@ -160,15 +167,26 @@ try:
         encoded_soil = soil_encoder.transform([selected_soil])[0]
         input_data = [[n, p, k, temp, humidity, moisture, encoded_soil]]
 
+        # Translate district/state to English (in case user selected in another language)
+        try:
+            selected_district_en = GoogleTranslator(source=target_lang, target='en').translate(selected_district)
+            selected_state_en = GoogleTranslator(source=target_lang, target='en').translate(selected_state)
+        except:
+            selected_district_en = selected_district
+            selected_state_en = selected_state
+
+        # Filter crops grown in selected district
         district_crops = prod_df[
-            (prod_df["District_Name"] == selected_district) &
-            (prod_df["State_Name"] == selected_state)
+            (prod_df["District_Name"].str.lower() == selected_district_en.lower()) &
+            (prod_df["State_Name"].str.lower() == selected_state_en.lower())
         ]["Crop"].dropna().unique()
 
+        # Predict probabilities for all crops
         proba = soil_model.predict_proba(input_data)[0]
         labels = soil_model.classes_
         crop_scores = {label: prob for label, prob in zip(labels, proba)}
 
+        # Keep only crops from this district
         recommended = [(crop, crop_scores[crop]) for crop in district_crops if crop in crop_scores]
         recommended = sorted(recommended, key=lambda x: x[1], reverse=True)[:5]
 
@@ -176,8 +194,8 @@ try:
             st.success(_("✅ Top Recommended Crops Grown in Your District:"))
             for crop, score in recommended:
                 st.write(f"🌿 *{_(crop)}* — {_('Confidence')}: {score * 100:.1f}%")
-
         else:
             st.warning(_("❌ No matching crops from prediction found in this district."))
+
 except FileNotFoundError:
     st.warning(_("⚠ Please upload data_core.csv."))
