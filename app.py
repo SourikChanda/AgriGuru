@@ -90,7 +90,15 @@ def get_weather(city):
     if res.status_code == 200:
         return res.json()['list'][:5]
     return None
-
+district_to_city = {
+    "MALDAH": "Malda",
+    "BARDHAMAN": "Bardhaman",
+    "NADIA": "Krishnanagar",
+    "24 PARAGANAS NORTH": "Barasat",
+    "24 PARAGANAS SOUTH": "Diamond Harbour",
+    "HOWRAH": "Howrah",
+    "KOLKATA": "Kolkata"
+}
 if district_selected_en:
     city = district_to_city.get(district_selected_en.upper(), district_selected_en)
     city_query= GoogleTranslator(source='auto', target='en').translate(city)
