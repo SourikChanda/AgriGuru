@@ -10,7 +10,8 @@ No IoT, no cost, no terminal. Built for rural accessibility.
 ---
 
 ### 🔗 Live App
-[agriguru-app-3mojepkkxwzuu9w3htzsxb.streamlit.app]
+[agriguru-7yakjwj8mxrhkxxpqldkvw
+.streamlit.app]
 
 ---
 
