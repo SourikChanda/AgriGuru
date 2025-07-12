@@ -3,4 +3,4 @@ pandas
 requests
 scikit-learn
 deep-translator==1.11.4
-xgboost==1.7.6
+
